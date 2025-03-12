@@ -1,0 +1,6 @@
+build==1.2.2.post1
+setuptools==75.8.0
+wheel==0.45.1
+poetry==2.0.1
+
+

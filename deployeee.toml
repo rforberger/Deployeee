@@ -1,0 +1,59 @@
+[application]
+name = "AI-jobrecommendations"
+description = "A job recommendation application based on behavior with ultimate deployment features"
+applicationpath = "/Users/ronnyforberger/IdeaProjects/AI-model-ultimate-deploy-main/AI-model-ultimate-deploy/"
+
+[install]
+packages = ["podman"] # OK
+
+[containerbuild]
+buildsystem = "podman" # OK
+image = "ai-model-artwork"
+containerdirectory = "container" # OK
+containerfile = "Containerfile" #OK
+tag = "ai_job_recommendations" # OK
+containerbuildversion = 2025.03 #  OK
+
+[[containerrun]]
+environment = "production" # OK
+runengine = "kubernetes" # OK
+published_ports = "5001" # OK
+#env = ["FERNET_KEY", "ARM_…"]
+manifest_deploy_type = "bicep" # OK
+manifest_type = "helm"
+manifest = "helm/charts/ai-job-recommendations"
+##kubernetes_cluster_name = "aks01" # OK
+##containerregistry_name = "acr01" # OK
+#manifest_version = 2025.02 # same as containerbuildversion
+
+[[containerrun]]
+environment = "development" # OK
+runengine = "podman" #
+published_ports = "5001" # OK
+#env = ["FERNET_KEY="]
+#manifest_deploy_type = "bicep" # OK
+#manifest_type = "helm"
+#manifest = "helm/charts/ai-job-recommendations"
+
+[runengines]
+runengines = '{ "podman": {}, "kubernetes": { "platform": "azure", "cloud": "azureCloud", "deploytool": "az", "type": "bicep", "resourcegroup": "AI-job-recommendations", "bicepfile": "main.bicep", "bicepparamfile": "main.bicepparam" } }'
+
+[deployment]
+ci = "github" # OK
+template_dir = "gh_templates/" # OK
+deploytool = '{ "runengine": "kubernetes", "deploytool": "az", "type": "bicep", "bicepfile": "app.bicep", "bicepparamfile": "app.bicepparam" }'
+deployworkflow = "deploy" # OK
+destroyworkflow = "destroy" # OK
+docker_hub_username = "rforberger" # OK
+
+[[hosting]] # OK
+base_url = "https://aijobrecommender-backend.ronnyforberger.de" # OK
+environment = "production" # OK
+
+[[hosting]] # OK
+base_url = "https://localhost:5001" # OK
+environment = "development" # OK
+
+[github]
+owner = "rforberger" # OK
+repo = "AI-model-ultimate-deploy" # OK

@@ -1,0 +1,162 @@
+name: Deploy
+run-name: Deploy the stack
+"on":
+  workflow_dispatch:
+  repository_dispatch:
+    types: [trigger-from-repoA]
+env:
+{% if platform == 'azure' %}
+  ARM_CLIENT_ID: "${{ "{{ secrets.azure_client_id }}" }}"
+  ARM_CLIENT_SECRET: "${{ "{{ secrets.azure_client_secret }}" }}"
+  ARM_TENANT_ID: "${{ "{{ secrets.azure_tenant_id }}" }}"
+  ARM_SUBSCRIPTION_ID: "${{ "{{ secrets.azure_subscription_id }}" }}"
+  RG: "{{ rg }}"
+  {% for env in ENVS %}{{ env.key }}: "{{ env.value }}"
+  {% endfor %}
+#  LOCATION: "uksouth"
+#  MANGAGED_IDENTITY_BICEP: "crossplane-test"
+{% endif %}
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  install:
+    if: github.event.head_commit.message != 'norun'
+    runs-on: self-hosted
+    steps:
+    - name: Display information
+      run: |
+        echo "##########################################################################################################"
+        echo "# Name: {{ name }}"
+        echo "# Description: {{ description }}"
+        echo "# Resource Group:" ${{ "{{ env.RG }}" }}
+        echo "##########################################################################################################"
+
+    - name: Installing packages
+      run: |
+        echo "Installing {% for pkg in packages %}{{ pkg }} {% endfor %}"
+        sudo apt-get update
+        sudo apt-get install -y {% for pkg in packages %}{{ pkg }} {% endfor %}
+        echo "Done!"
+
+    - name: Removing unnecessary packages
+      run: |
+        sudo apt-get clean
+        sudo apt-get autoremove -y
+
+  build:
+    if: github.event.head_commit.message != 'norun'
+    needs: [install]
+    runs-on: self-hosted
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Starting Podman
+      run: |
+        sudo systemctl start {{ buildsystem }}
+
+    - name: Podman build base container
+      run: |
+        {{ base_container_build_command }}
+      working-directory: {{ container_build_directory }}
+
+    - name: Podman build
+      run: |
+        {{ container_build_command }}
+      working-directory: {{ container_build_directory }}
+
+  build-and-deploy:
+    if: github.event.head_commit.message != 'norun'
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+{% if platform == 'azure' %}
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+           client-id: ${{ "{{ env.ARM_CLIENT_ID }}" }}
+           tenant-id: ${{ "{{ env.ARM_TENANT_ID }}" }}
+           subscription-id: "${{ "{{ env.ARM_SUBSCRIPTION_ID }}" }}"
+           #client-secret: ${{ "{{ env.ARM_CLIENT_SECRET }}" }}
+           environment: {{ cloud }}
+{#
+#          creds: \$\{\{ secrets.AZURE_CREDENTIALS \}\}
+#          #auth-type: IDENTITY
+#          #subscription-id: \${\{ secrets.AZURE_SUBSCRIPTION_ID \}\}
+#}
+
+      - name: Create resource group
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            {{ deploytool }} group create --location "${{ "{{ vars.LOCATION }}" }}" --resource-group "${{ "{{ env.RG }}" }}"
+
+{% if manifest_deploy_type == 'bicep' %}
+      - name: Create bicep managed identity
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            {{ deploytool }} identity create --name "${{ "{{ vars.MANGAGED_IDENTITY_BICEP }}" }}" --resource-group "${{ "{{ env.RG }}" }}"
+
+      - name: Bicep deployment
+        uses: azure/bicep-deploy@v2
+        with:
+          type: deployment
+          operation: create
+          name: AI-model-example
+          #location: "${{ "{{ env.LOCATION }}" }}"
+          scope: resourceGroup
+          subscription-id: "${{ "{{ env.ARM_SUBSCRIPTION_ID }}" }}"
+          resource-group-name: "${{ "{{ env.RG }}" }}"
+          template-file: {{ bicep_file }}
+          parameters-file: {{ bicep_paramfile }}
+          parameters: "{ \"identityResourceId\": \"/subscriptions/${{ "{{ env.ARM_SUBSCRIPTION_ID }}" }}/resourcegroups/${{ "{{ env.RG }}" }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${{ "{{ vars.MANGAGED_IDENTITY_BICEP }}" }}\" }"
+          environment: {{ cloud }}
+{% endif %}
+{% endif %}
+
+      - name: Install Up Upbound
+        run: |
+          curl -sL "https://cli.upbound.io" | sh
+
+
+
+
+{#
+#  plan:
+#    name: Terraform plan
+#    needs: build-and-deploy
+#    if: github.ref == 'refs/heads/main' && github.event.head_commit.message != 'norun'
+#    runs-on: ubuntu-latest
+#    steps:
+#       #- name: Azure Login
+#       #  uses: azure/login@v2
+#       #  with:
+#       #    creds: ${{ secrets.AZURE_CREDENTIALS }}
+#       - name: Initialise project
+#         uses: actions/checkout@v4
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#       - name: View Terraform fmt
+#         run: |
+#           set
+#           terraform fmt
+#           terraform init
+#       - name: Terraform plan
+#         run: ./scripts/terraform-plan.sh ${{ secrets.wg_client_pubkey }} ${{ secrets.wg_psk }} ${{ secrets.wg_server_prikey }} ${{ secrets.linux_user_password }}
+#         env:
+#           TF_VAR_ACCOUNT_JSON: "${{ secrets.google_application_credentials }}"
+##           TF_VAR_azure_client_id: "${{ secrets.azure_client_id }}"
+##           TF_VAR_azure_client_secret: "${{ secrets.azure_client_secret }}"
+##           TF_VAR_azure_tenant_id: "${{ secrets.azure_tenant_id }}"
+##           #AZURE_CREDENTIALS: "${{ secrets.AZURE_CREDENTIALS }}"
+#
+#       - name: Terraform apply
+#         run: terraform apply "./tfplan"
+#
+#}

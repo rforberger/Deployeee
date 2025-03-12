@@ -1,0 +1,67 @@
+name: Destroy
+run-name: Destroy the stack
+"on":
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+env:
+  ARM_CLIENT_ID: "${{ "{{ secrets.azure_client_id }}" }}"
+  ARM_CLIENT_SECRET: "${{ "{{ secrets.azure_client_secret }}" }}"
+  ARM_TENANT_ID: "${{ "{{ secrets.azure_tenant_id }}" }}"
+  ARM_SUBSCRIPTION_ID: "${{ "{{ secrets.azure_subscription_id }}" }}"
+permissions:
+  id-token: write
+  contents: read
+jobs:
+{#
+#  notify:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Send Webhook to Teams
+#        run: |
+#          curl -X POST https://<your-webhook-url> \
+#          -H "Content-Type: application/json" \
+#          -d '{
+#                "@type": "MessageCard",
+#                "@context": "http://schema.org/extensions",
+#                "summary": "Workflow Notification",
+#                "themeColor": "0076D7",
+#                "title": "Workflow Notification",
+#                "text": "A workflow is about to run. Please confirm to proceed.",
+#                "potentialAction": [
+#                  {
+#                    "@type": "HttpPOST",
+#                    "name": "Approve",
+#                    "target": "https://<your-approval-endpoint>",
+#                    "body": "{\"action\":\"approve\"}"
+#                  },
+#                  {
+#                    "@type": "HttpPOST",
+#                    "name": "Reject",
+#                    "target": "https://<your-rejection-endpoint>",
+#                    "body": "{\"action\":\"reject\"}"
+#                  }
+#                ]
+#              }'
+#}
+  destroy:
+    name: Infrastructure destroy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initialise project
+        uses: actions/checkout@v4
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ "{{ env.ARM_CLIENT_ID }}" }}
+          tenant-id: ${{ "{{ env.ARM_TENANT_ID }}" }}
+          subscription-id: ${{ "{{ env.ARM_SUBSCRIPTION_ID }}" }}
+      - name: Delete resource group
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az group delete --name ${{ "{{ vars.RG }}" }} --yes
+
+

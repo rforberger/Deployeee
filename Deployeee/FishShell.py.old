@@ -1,0 +1,25 @@
+import subprocess
+
+class FishShell:
+  def __init__(self):
+    try:
+      # run fish env script
+      result = subprocess.run(["fish", "-c", "source ../env.fish"], capture_output=True, text=True)
+    except Exception as e:
+      print(f"Error running env script: {e}")
+      return None
+
+    try:
+      # Parse environment variables into a dictionary
+      self.env_vars = [dict(line.split("=", 1) for line in result.stdout.strip().split("\n") if "=" in line)]
+    except Exception as e:
+      print(f"Error extracting environment variables: {e}")
+
+  def get_env_variables(self):
+    try:
+      return self.env_vars
+    except Exception as e:
+      print(f"Error getting environment variables: {e}")
+
+  def __call__(self, *args, **kwargs):
+    return self

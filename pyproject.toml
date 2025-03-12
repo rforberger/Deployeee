@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project_tests]
+name = "tests"
+version = "0.1.0"
+description = "tests"
+authors = [{name = "Ronny Forberger", email = "ronnyforberger@ronnyforberger.de"}]
+dependencies = [
+    "unittest",
+    "Deployeee",
+    "inspect",
+]
+
+[project]
+name = "Deployeee"
+version = "0.1.0"
+description = "A deployment tool with rich deployment features"
+authors = [{name = "Ronny Forberger", email = "ronnyforberger@ronnyforberger.de"}]
+dependencies = [
+    "Jinja2",
+    "alive_progress",
+    "jsonschema",
+    "pyyaml",
+    "python-dotenv"
+]
+
+[tool.setuptools]
+packages = ["tests", "Deployeee"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4"
