@@ -9,6 +9,8 @@ try:
 except ImportError:
   alive_progress_package = None
 import time
+import json
+import base64
 
 try:
   from dotenv import dotenv_values, load_dotenv
@@ -163,10 +165,11 @@ class Deploy:
       print(f"Error building container: {e}")
 
     # Pushing Image
-    try:
-      self.push_image(image_name)
-    except Exception as e:
-      print(f"Error pushing image: {e}")
+    if not self.command_line_parameters.dont_upload:
+      try:
+        self.push_image(image_name)
+      except Exception as e:
+        print(f"Error pushing image: {e}")
 
     print(f"Finished.")
 
@@ -250,6 +253,29 @@ class Deploy:
 
     print(f"Finished.")
 
+  def is_logged_in(self, registry: str) -> bool:
+    auth_file = os.path.expanduser("~/.config/containers/auth.json")
+
+    if not os.path.exists(auth_file):
+      print("No auth.json file found.")
+      return False
+
+    with open(auth_file, "r") as f:
+      data = json.load(f)
+
+    auths = data.get("auths", {})
+
+    if registry in auths:
+      encoded = auths[registry].get("auth")
+      if encoded:
+        decoded = base64.b64decode(encoded).decode()
+        username = decoded.split(":")[0]
+        print(f"✅ Logged in to {registry} as {username}")
+        return True
+
+    print(f"❌ Not logged in to {registry}")
+    return False
+
   def push_image(self, image_name):
     # Define image name and tag
     full_image_name = image_name
@@ -264,12 +290,13 @@ class Deploy:
         print(f"❌ Error tagging: {e}")
 
       # Step 2: Authenticate to Docker Hub
-      try:
-        subprocess.run(["podman", "login", "--username", username, "docker.io"], check=True)
-        print("✅ Successfully logged into Docker Hub")
-      except subprocess.CalledProcessError as e:
-        print(f"❌ Login failed: {e}")
-        raise Exception("Error logging into docker.io.")
+      if not self.is_logged_in("docker.io"):
+        try:
+          subprocess.run(["podman", "login", "--username", username, "docker.io"], check=True)
+          print("✅ Successfully logged into Docker Hub")
+        except subprocess.CalledProcessError as e:
+          print(f"❌ Login failed: {e}")
+          raise Exception("Error logging into docker.io.")
 
       # Step 3: Push the image to Docker Hub
       try:

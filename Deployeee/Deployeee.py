@@ -30,6 +30,7 @@ class Deployeee:
     parser.add_argument("-p", "--production", action="store_true", help="Whether to use production mode on local build ")
     parser.add_argument("-r", "--run-local", action="store_true", help="Whether to run container locally")
     parser.add_argument("-c", "--deploy-cloud", action="store_true", help="Whether to deploy production to cloud")
+    parser.add_argument("-du", "--dont-upload", action="store_true", help="Don't upload container")
     # Parse arguments
     args = parser.parse_args()
     return args
