@@ -23,5 +23,7 @@ jobs:
       - name: Checkout AI-Model-Ultimate-Deploy Repository
         uses: actions/checkout@v4
         with:
-          repository: https://github.com/rforberger/AI-model-ultimate-deploy.git
+          repository: rforberger/AI-model-ultimate-deploy
           path: './AI-Model-Ultimate-Deploy'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
