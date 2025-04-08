@@ -24,5 +24,6 @@ jobs:
         with:
           repository: rforberger/AI-model-ultimate-deploy
           path: './AI-Model-Ultimate-Deploy'
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
+          ref: 'Extended_View_2025_03'
 
