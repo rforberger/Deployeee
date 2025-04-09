@@ -49,3 +49,8 @@ jobs:
           . bin/activate
           pip3 install -r requirements.txt
           poetry install --no-root
+
+      - name: Run deployeee.py
+        run: |
+          . bin/activate
+          ./deployeee.py
