@@ -27,3 +27,11 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           ref: 'Extended_View_2025_03'
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Create Python Virtual Env
+        run: |
+          python3 -m venv .
+
