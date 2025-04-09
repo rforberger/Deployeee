@@ -50,6 +50,10 @@ jobs:
           pip3 install -r requirements.txt
           poetry install --no-root
 
+      - name: Podman login
+        run: |
+          podman login -u "${{ vars.DOCKERIO_USERNAME }}" -p "${{ secrets.DOCKERIO_PASSWORD }}" docker.io
+
       - name: Run deployeee.py
         run: |
           . bin/activate
