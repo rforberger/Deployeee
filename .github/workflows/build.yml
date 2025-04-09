@@ -40,15 +40,12 @@ jobs:
         run: |
           python3 -m venv .
 
-      - name: Activate venv
-        run: |
-          . bin/activate
-
       - name: Install Python pip
         run: |
           sudo apt install -y python3-pip
 
       - name: Install Python dependencies
         run: |
+          . bin/activate
           pip3 install -r requirements.txt
           poetry install --no-root
