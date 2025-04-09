@@ -2,7 +2,8 @@
 name = "AI-jobrecommendations"
 description = "A job recommendation application based on behavior with ultimate deployment features"
 #applicationpath = "/Users/ronnyforberger/IdeaProjects/AI-model-ultimate-deploy-main/AI-model-ultimate-deploy/"
-applicationpath = "/mnt/c/Users/ronny/IdeaProjects/AI-model-ultimate-deploy-main/AI-model-ultimate-deploy/"
+#applicationpath = "/mnt/c/Users/ronny/IdeaProjects/AI-model-ultimate-deploy-main/AI-model-ultimate-deploy/"
+applicationpath = "./AI-Model-Ultimate-Deploy"
 
 [install]
 packages = ["podman"] # OK
