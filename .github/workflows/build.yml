@@ -54,4 +54,5 @@ jobs:
         run: |
           . bin/activate
           podman login -u "${{ vars.DOCKERIO_USERNAME }}" -p "${{ secrets.DOCKERIO_PASSWORD }}" docker.io
+          ls -rtlh ~/.config/containers/auth.json
           ./deployeee.py
