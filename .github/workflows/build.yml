@@ -10,6 +10,8 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  REGISTRY_AUTH_FILE: "/tmp/auth.json"
 
 jobs:
   build:
@@ -54,5 +56,4 @@ jobs:
         run: |
           . bin/activate
           podman login -u "${{ vars.DOCKERIO_USERNAME }}" -p "${{ secrets.DOCKERIO_PASSWORD }}" docker.io
-          ls -rtlh ~/.config/containers/auth.json
           ./deployeee.py

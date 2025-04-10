@@ -254,7 +254,7 @@ class Deploy:
     print(f"Finished.")
 
   def is_logged_in(self, registry: str) -> bool:
-    auth_file = os.path.expanduser("~/.config/containers/auth.json")
+    auth_file = os.path.expanduser("/tmp/auth.json")
 
     if not os.path.exists(auth_file):
       print("No auth.json file found.")
